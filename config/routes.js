@@ -38,7 +38,8 @@ module.exports.routes = {
 
   'post /v1/auth.signup':'AuthController.signup',
   'get /v1/auth.login':'AuthController.signin',
-  'post /v1/auth/facebook': 'AuthController.facebook'
+  'post /v1/auth/facebook': 'AuthController.facebook',
+  'get /v1/play.audio':'PlayerController.playAudio'
 
   /***************************************************************************
   *                                                                          *
