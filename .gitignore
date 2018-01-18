@@ -42,6 +42,7 @@
 config/local.js
 uploads
 assets/music
+package-lock.json
 
 
 

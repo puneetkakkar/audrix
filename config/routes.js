@@ -39,11 +39,11 @@ module.exports.routes = {
   'post /v1/auth.signup':'AuthController.signup',
   'get /v1/auth.login':'AuthController.signin',
   'post /v1/auth/facebook': 'AuthController.facebook',
-  // 'get /v1/play.audio':'PlayerController.playAudio',
-  // 'get /v1/get.audio.stream': 'PlayerController.getAudioStream',
-  // 'get /v1/get.audio.size': 'PlayerController.getAudioSize',
+
+
   'post /v1/post.track': 'PlayerController.uploadTrack',
-  'get /v1/get.track' : 'PlayerController.getTrack'
+  'get /v1/get.track' : 'PlayerController.getTrack',
+  'get /v1/get.track.list' : 'PlayerController.getTrackList',
 
   /***************************************************************************
   *                                                                          *
