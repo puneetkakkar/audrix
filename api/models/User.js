@@ -22,6 +22,10 @@ module.exports = {
             type: 'string',
             // required: true
         },
+        googleId: {
+            type: 'string',
+            unique: true
+        },
         facebookId: {
             type: 'string',
             unique: true

@@ -36,9 +36,14 @@ module.exports.routes = {
     view: 'homepage'
   },
 
+  'get /v1/auth.validate.token':'AuthController.validateToken',
+
   'post /v1/auth.signup':'AuthController.signup',
   'get /v1/auth.login':'AuthController.signin',
+  'get /v1/username.validate': 'AuthController.validateUsername',
   'post /v1/auth/facebook': 'AuthController.facebook',
+  'post /v1/auth/google': 'AuthController.google',
+  'post /v1/post.credentials': 'AuthController.saveCredentials',
 
 
   'post /v1/post.track': 'PlayerController.uploadTrack',
