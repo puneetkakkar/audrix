@@ -47,7 +47,7 @@ module.exports.routes = {
 
 
   'post /v1/post.track': 'PlayerController.uploadTrack',
-  'get /v1/get.track' : 'PlayerController.getTrack',
+  'get /v1/getTrack/:id' : 'PlayerController.getTrack',
   'get /v1/get.track.list' : 'PlayerController.getTrackList',
 
   /***************************************************************************

@@ -35,7 +35,7 @@
   },
   "scripts": {
     "debug": "node debug app.js",
-    "start": "node app.js"
+    "start": "node --max-old-space-size=4096 app.js"
   },
   "main": "app.js",
   "repository": {

@@ -117,37 +117,48 @@ module.exports = {
       });
     }
     var token = '';
-    var id = '';
+    var id = req.params.id;
     var credentials = req.header('Authorization').split(' ');
-    if (!_.isEmpty(credentials[1])) {
-      id = credentials[1];
-    } else {
-      return res.status(401).send({
-        message: 'Please make sure your request has correct Authorization header'
-      });
-    }
+    // if (!_.isEmpty(credentials[1])) {
+    //   id = credentials[1];
+    // } else {
+    //   return res.status(401).send({
+    //     message: 'Please make sure your request has correct Authorization header'
+    //   });
+    // }
+
     var host = sails.config.connections.localMongo.host;
     var port = sails.config.connections.localMongo.port;
     var database = sails.config.connections.localMongo.database;
     var db = mongo.Db(database, mongo.Server(host, port));
     var buffer = "";
+    var _id = "";
+
     db.open(function(err) {
-      var gfs = Grid(db, mongo);
-      var readStream = gfs.createReadStream({
-        _id: id,
-        mode: 'r',
-        chunkSize: 1024 * 100,
-        content_type: 'audio/mpeg',
-        root: 'track'
-      });
+      db.collection('track.files').findOne({
+        "metadata.trackId": id
+      }, function(err, file) {
+        if (err) {
+          return err;
+        }
+        _id = file._id;
+        var gfs = Grid(db, mongo);
+        var readStream = gfs.createReadStream({
+          _id: _id,
+          mode: 'r',
+          chunkSize: 1024 * 100,
+          content_type: 'audio/mpeg',
+          root: 'track'
+        });
 
-      readStream.on("data", function(chunk) {
-        buffer += chunk;
-      });
+        readStream.on("data", function(chunk) {
+          buffer += chunk;
+        });
 
-      // dump contents to console when complete
-      readStream.on("end", function() {});
-      readStream.pipe(res);
+        // dump contents to console when complete
+        readStream.on("end", function() {});
+        readStream.pipe(res);
+      });
     });
   },
 
@@ -182,7 +193,6 @@ module.exports = {
           }
           var trackDuration = minuteValue + ':' + secondValue;
           metadataArray[i] = {
-            id: files[i]._id,
             trackId: files[i].metadata.trackId,
             filename: files[i].filename,
             length: files[i].length,
@@ -193,6 +203,7 @@ module.exports = {
             genre: files[i].metadata.genre,
             duration: trackDuration,
             isPlaying: false,
+            isStopped: true,
             picture: files[i].metadata.picture
           }
         };
