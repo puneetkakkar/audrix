@@ -1,19 +1,19 @@
 'use strict'
 
-var _ = require("lodash");
-var jwt = require('jwt-simple');
-var bcrypt = require('bcrypt');
-var passport = require('passport');
-var querystring = require('querystring');
-var request = require('request');
+const _ = require("lodash");
+const jwt = require('jwt-simple');
+const bcrypt = require('bcrypt');
+const passport = require('passport');
+const querystring = require('querystring');
+const request = require('request');
 
 module.exports = {
 
-  signup: function(req, res) {
+  signup: (req, res) => {
 
     User.findOne({
       email: req.body.email
-    }, function(err, existingUser) {
+    }, (err, existingUser) => {
       if (existingUser) {
         return res.status(409).send({
           status: false,
@@ -23,7 +23,7 @@ module.exports = {
 
       User.findOne({
         username: req.body.username
-      }, function(err, userUsed) {
+      }, (err, userUsed) => {
         if (userUsed) {
           return res.status(409).send({
             status: false,
@@ -31,17 +31,17 @@ module.exports = {
           });
         }
         const saltRounds = 10;
-        bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
           if (err) {
             hash = req.body.password;
           }
-          var cred = {
+          let cred = {
             email: req.body.email,
             username: req.body.username,
             password: hash,
           };
 
-          User.create(cred).exec(function(err, result) {
+          User.create(cred).exec( (err, result) => {
             if (err) {
               return res.status(500).send({
                 status: false,
@@ -58,15 +58,15 @@ module.exports = {
     });
   },
 
-  signin: function(req, res) {
+  signin: (req, res) => {
     if (!req.header('Authorization')) {
       return res.status(401).send({
         message: 'Please make sure your request has an Authorization header'
       });
     }
-    var username = '';
-    var pwd = '';
-    var credentials = req.header('Authorization').split(' ');
+    let username = '';
+    let pwd = '';
+    let credentials = req.header('Authorization').split(' ');
     if (!_.isEmpty(credentials[1])) {
       username = credentials[1].split(':')[0];
       pwd = credentials[1].split(':')[1];
@@ -85,14 +85,14 @@ module.exports = {
       username: username,
       password: pwd
     };
-    passport.authenticate('local', function(err, user, info) {
+    passport.authenticate('local', (err, user, info) => {
       if ((err) || (!user)) {
         return res.send({
           message: 'login failed'
         });
         res.send(err);
       }
-      req.logIn(user, function(err) {
+      req.logIn(user, (err) => {
         if (err) res.send(err);
         return res.send({
           status: true,
@@ -106,13 +106,13 @@ module.exports = {
       });
     })(req, res);
   },
-  logout: function(req, res) {
+  logout: (req, res) => {
     req.logout();
     res.send({
       status: true
     });
   },
-  validateToken: function(req, res) {
+  validateToken: (req, res) => {
     var payload = UtilService.authorizeToken(req, res);
     if (payload !== false) {
       return res.status(200).send({
@@ -124,14 +124,14 @@ module.exports = {
       invalid: true
     });
   },
-  validateUsername: function(req, res) {
+  validateUsername: (req, res) => {
     if (!req.header('Authorization')) {
       return res.status(401).send({
         message: 'Please make sure your request has an Authorization header'
       });
     }
-    var username = '';
-    var credentials = req.header('Authorization').split(' ');
+    let username = '';
+    let credentials = req.header('Authorization').split(' ');
     if (!_.isEmpty(credentials[1])) {
       username = credentials[1];
       if (username === 'undefined') {
@@ -162,15 +162,15 @@ module.exports = {
       }
     }
   },
-  saveCredentials: function(req, res) {
+  saveCredentials: (req, res) => {
     if (!req.header('Authorization')) {
       return res.status(401).send({
         message: 'Please make sure your request has an Authorization header'
       });
     }
-    var username = '';
-    var pwd = '';
-    var credentials = req.header('Authorization').split(' ');
+    let username = '';
+    let pwd = '';
+    let credentials = req.header('Authorization').split(' ');
     if (!_.isEmpty(credentials[1])) {
       username = credentials[1].split(':')[0];
       pwd = credentials[1].split(':')[1];
@@ -180,12 +180,11 @@ module.exports = {
         });
       }
       const saltRounds = 10;
-      bcrypt.hash(pwd, saltRounds, function(err, hash) {
+      bcrypt.hash(pwd, saltRounds, (err, hash) => {
         if (err) {
           hash = pwd;
         }
-        console.log(req.body);
-        var cred = {
+        let cred = {
           firstname: req.body.data.firstname,
           lastname: req.body.data.lastname,
           facebookId: req.body.data.facebookId,
@@ -194,13 +193,13 @@ module.exports = {
           password: hash
         };
 
-        var data = {
+        let data = {
           username: username,
           email: cred.email,
           token: TokenService.createJWT(username, 3600000)
         };
 
-        User.create(cred).exec(function(err, result) {
+        User.create(cred).exec( (err, result) => {
           if (err) {
             return res.status(500).send({
               status: false,
@@ -216,11 +215,11 @@ module.exports = {
       });
     }
   },
-  facebook: function(req, res) {
-    var fields = ['id', 'email', 'first_name', 'last_name', 'link', 'name'];
-    var accessTokenUrl = 'https://graph.facebook.com/v2.5/oauth/access_token';
-    var graphApiUrl = 'https://graph.facebook.com/v2.5/me?fields=' + fields.join(',');
-    var params = {
+  facebook: (req, res) => {
+    let fields = ['id', 'email', 'first_name', 'last_name', 'link', 'name'];
+    let accessTokenUrl = 'https://graph.facebook.com/v2.5/oauth/access_token';
+    let graphApiUrl = 'https://graph.facebook.com/v2.5/me?fields=' + fields.join(',');
+    let params = {
       code: req.body.code,
       client_id: req.body.clientId,
       client_secret: sails.config.FACEBOOK_SECRET,
@@ -231,7 +230,7 @@ module.exports = {
       url: accessTokenUrl,
       qs: params,
       json: true
-    }, function(err, response, accessToken) {
+    }, (err, response, accessToken) => {
       if (response.statusCode !== 200) {
         return res.status(500).send({
           message: accessToken.error.message
@@ -243,7 +242,7 @@ module.exports = {
         url: graphApiUrl,
         qs: accessToken,
         json: true
-      }, function(err, response, profile) {
+      }, (err, response, profile) => {
         if (response.statusCode !== 200) {
           return res.status(500).send({
             message: profile.error.message
@@ -252,9 +251,9 @@ module.exports = {
 
         User.findOne({
           email: profile.email
-        }).exec(function(err, existingUser) {
+        }).exec( (err, existingUser) => {
           if (existingUser) {
-            var data = {
+            let data = {
               username: existingUser.username,
               email: existingUser.email,
               token: TokenService.createJWT(existingUser.username, 3600000)
@@ -265,7 +264,7 @@ module.exports = {
               data
             });
           } else {
-            var cred = {
+            let cred = {
               firstname: profile.first_name,
               lastname: profile.last_name,
               email: profile.email,
@@ -282,10 +281,10 @@ module.exports = {
       });
     });
   },
-  google: function(req, res) {
-    var accessTokenUrl = 'https://www.googleapis.com/oauth2/v4/token';
-    var peopleApiUrl = 'https://www.googleapis.com/plus/v1/people/me/openIdConnect';
-    var params = {
+  google: (req, res) => {
+    const accessTokenUrl = 'https://www.googleapis.com/oauth2/v4/token';
+    const peopleApiUrl = 'https://www.googleapis.com/plus/v1/people/me/openIdConnect';
+    let params = {
       code: req.body.code,
       client_id: req.body.clientId,
       client_secret: sails.config.GOOGLE_SECRET,
@@ -297,9 +296,9 @@ module.exports = {
       url: accessTokenUrl,
       qs: params,
       json: true
-    }, function(err, response, token) {
-      var accessToken = token.access_token;
-      var headers = {
+    }, (err, response, token) => {
+      let accessToken = token.access_token;
+      let headers = {
         Authorization: 'Bearer ' + accessToken
       };
       // Step 2. Retrieve profile information about the current user.
@@ -307,7 +306,7 @@ module.exports = {
         url: peopleApiUrl,
         headers: headers,
         json: true
-      }, function(err, response, profile) {
+      }, (err, response, profile) => {
         if (profile.error) {
           return res.status(500).send({
             message: profile.error.message
@@ -316,9 +315,9 @@ module.exports = {
         // Step 3a. Link user accounts.
         User.findOne({
           email: profile.email
-        }).exec(function(err, existingUser) {
+        }).exec( (err, existingUser) => {
           if (existingUser) {
-            var data = {
+            let data = {
               username: existingUser.username,
               email: existingUser.email,
               token: TokenService.createJWT(existingUser.username, 3600000)
@@ -329,7 +328,7 @@ module.exports = {
               data
             });
           } else {
-            var cred = {
+            let cred = {
               firstname: profile.given_name,
               lastname: profile.family_name,
               email: profile.email,

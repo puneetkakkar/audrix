@@ -3,21 +3,21 @@ var bcrypt = require('bcrypt');
 var secret = sails.config.TOKEN_SECRET;
 
 module.exports = {
-	createJWT: function(username, expiry) {
+	createJWT: (username, expiry) => {
 	    expiry = typeof expiry !== 'undefined' ? expiry : 86400;//1 Day token by default
-	    var epoch = (new Date()).getTime();
-	    var payload = {username:username, created:epoch , expiry:expiry*1};
-	    var token = jwt.encode(payload, secret);
+	    let epoch = (new Date()).getTime();
+	    let payload = {username:username, created:epoch , expiry:expiry*1};
+	    let token = jwt.encode(payload, secret);
 	    return token;
 	},
-	getTokenPayload : function( token ) {
+	getTokenPayload : ( token ) => {
 		console.log("getPayloadToken" - token);
 		if( token = ' ' || (typeof token === 'undefined') ) {
 			return null;
 		}
 
-		var epoch = (new Date()).getTime();
-		var payload = jwt.decode( token, secret );
+		let epoch = (new Date()).getTime();
+		let payload = jwt.decode( token, secret );
 		// console.log(payload.expiry);
 		// console.log(epoch - payload.created);
 		if( payload ) {
@@ -27,10 +27,10 @@ module.exports = {
 		}
 		return null;
 	},
-	isTokenValidWithUsername : function( username, token, response ) {
-		var status = false;
-		var epoch = (new Date()).getTime();
-		var payload = jwt.decode( token, secret );
+	isTokenValidWithUsername : ( username, token, response ) => {
+		let status = false;
+		let epoch = (new Date()).getTime();
+		let payload = jwt.decode( token, secret );
 
 		if( payload ) {
 			if( payload.username === username ) {
@@ -52,14 +52,14 @@ module.exports = {
 		response.status = status;
 		return response.status;
 	},
-	isTokenValid : function( token) {
-		var status = false;
-		var message = ' ';
+	isTokenValid : ( token) => {
+		let status = false;
+		let message = ' ';
 		if( token === 'null' || (typeof token === 'undefined')) {
 			return status = false;
 		}
-		var epoch = (new Date()).getTime();
-		var payload = jwt.decode( token, secret );
+		let epoch = (new Date()).getTime();
+		let payload = jwt.decode( token, secret );
 		if( payload ) {
 			if( payload.expiry >= ( epoch - payload.created ) ) {
 				status = true;

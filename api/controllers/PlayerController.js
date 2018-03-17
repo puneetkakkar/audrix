@@ -1,19 +1,19 @@
 'use strict'
 
-var http = require('http');
-var fs = require('fs');
-var path = require('path');
-var multer = require('multer');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const {
   spawn
 } = require('child_process');
 const {
   Readable
 } = require('stream');
-var Grid = require('gridfs-stream');
-var mongo = require('mongodb');
-var mm = require('musicmetadata');
-var os = require('os');
+const Grid = require('gridfs-stream');
+const mongo = require('mongodb');
+const mm = require('musicmetadata');
+let os = require('os');
 
 os.tmpDir = os.tmpdir;
 
@@ -24,7 +24,7 @@ os.tmpDir = os.tmpdir;
 
 module.exports = {
 
-  uploadTrack: function(req, res) {
+  uploadTrack: (req, res) => {
 
     upload(req, res).then(function(FileName) {
       var file = FileName;
@@ -63,7 +63,9 @@ module.exports = {
               console.log('done !');
               return res.status(200).send({
                 status: true,
-                message: 'File Uploaded Successfully'
+                message: 'File Uploaded Successfully',
+                trackId: metadata['trackId'],
+                filename: file
               });
             });
           });
@@ -80,37 +82,37 @@ module.exports = {
         var uploadFileName = newFileName + '_' + (new Date()).getTime() + '.mp3';
 
         req.file('file').upload({
-            maxBytes: 50000000,
-            dirname: '../../uploads',
-            saveAs: function(_newFileStream, next) {
-              return next(undefined, uploadFileName);
-            }
-          },
-          function(err, file, uploadToDatabase) {
-            if (err) {
-              console.log(err);
-              return reject(error);
-            }
-            if (typeof file[0] === 'undefined') {
-              console.log("Missing file");
-              return reject(error);
-            } else {
-              var source = path.join(__dirname + '/../../uploads/');
-              var destination = path.join(__dirname + '/../../uploads/');
-              var ffmpeg = spawn('ffmpeg', ['-i', source + uploadFileName, '-acodec', 'libmp3lame', '-b:a', '128k', '-f', 'mp3', destination + newFileName + '.mp3']);
+          maxBytes: 50000000,
+          dirname: '../../uploads',
+          saveAs: function(_newFileStream, next) {
+            return next(undefined, uploadFileName);
+          }
+        },
+        function(err, file, uploadToDatabase) {
+          if (err) {
+            console.log(err);
+            return reject(error);
+          }
+          if (typeof file[0] === 'undefined') {
+            console.log("Missing file");
+            return reject(error);
+          } else {
+            var source = path.join(__dirname + '/../../uploads/');
+            var destination = path.join(__dirname + '/../../uploads/');
+            var ffmpeg = spawn('ffmpeg', ['-i', source + uploadFileName, '-acodec', 'libmp3lame', '-b:a', '128k', '-f', 'mp3', destination + newFileName + '.mp3']);
 
-              ffmpeg.stderr.on('close', function() {
-                fs.unlinkSync(source + uploadFileName);
-                console.log('...closing time! bye');
-              });
-              return resolve(newFileName + '.mp3');
-            }
-          });
+            ffmpeg.stderr.on('close', function() {
+              fs.unlinkSync(source + uploadFileName);
+              console.log('...closing time! bye');
+            });
+            return resolve(newFileName + '.mp3');
+          }
+        });
       });
     }
   },
 
-  getTrack: function(req, res) {
+  getTrack: (req, res) => {
     if (!req.header('Authorization')) {
       return res.status(401).send({
         message: 'Please make sure your request has an Authorization header'
@@ -134,10 +136,10 @@ module.exports = {
     var buffer = "";
     var _id = "";
 
-    db.open(function(err) {
+    db.open((err) => {
       db.collection('track.files').findOne({
         "metadata.trackId": id
-      }, function(err, file) {
+      }, (err, file) => {
         if (err) {
           return err;
         }
@@ -162,12 +164,12 @@ module.exports = {
     });
   },
 
-  getTrackList: function(req, res) {
+  getTrackList: (req, res) => {
     var host = sails.config.connections.localMongo.host;
     var port = sails.config.connections.localMongo.port;
     var database = sails.config.connections.localMongo.database;
     var db = mongo.Db(database, mongo.Server(host, port));
-    db.open(function(err) {
+    db.open( (err) => {
       db.collection('track.files').find().toArray(function(err, files) {
         if (err) {
           return err;
@@ -210,6 +212,134 @@ module.exports = {
         return res.status(200).send({
           status: true,
           metadata: metadataArray
+        });
+      });
+    });
+  },
+
+  addTrackFeatures: (req, res) => {
+    let filename = req.body.filename;
+    let trackId = req.body.trackId;
+    const Origmusic = path.join(__dirname + '/../../uploads/' + filename);
+    const highLevelProfile = path.join(__dirname + '/../../assets/profile.txt');
+    const lowLevelDestination = path.join(__dirname + '/../../track_features/lowlevel.json');
+    const highLevelDestination = path.join(__dirname + '/../../track_features/highlevel.json');
+    const lowLevel = spawn('streaming_extractor_music', [Origmusic, lowLevelDestination]);
+    lowLevel.stderr.on('close', () => {
+      let rawData = fs.readFileSync(lowLevelDestination);
+      let lowLevelFeatures = JSON.parse(rawData);
+      const highLevel = spawn('streaming_extractor_music_svm', [lowLevelDestination, highLevelDestination, highLevelProfile]);
+      highLevel.stderr.on('close', () => {
+        let rawData = fs.readFileSync(highLevelDestination);
+        let highLevelFeatures = JSON.parse(rawData);
+        const highlevel = highLevelFeatures.highlevel;
+        const lowlevel = lowLevelFeatures.lowlevel;
+        let energy = Math.pow(10, (Math.log(lowlevel.average_loudness) / 0.67));
+        let mode,key;
+        if(lowLevelFeatures.tonal.key_scale === 'minor') {
+          mode = 0;
+        } else {
+          mode = 1;
+        }
+        switch(lowLevelFeatures.tonal.key_key) {
+          case 'C':
+          key = 0;
+          break;
+          case 'C#':
+          key = 1;
+          break;
+          case 'D': 
+          key = 2;
+          break;
+          case 'D#':
+          key = 3;
+          break;
+          case 'E':
+          key = 4;
+          break;
+          case 'F':
+          key = 5;
+          break;
+          case 'F#': 
+          key = 6;
+          break;
+          case 'G':
+          key = 7;
+          break;
+          case 'G#':
+          key = 8;
+          break;
+          case 'A':
+          key = 9;
+          break;
+          case 'A#': 
+          key = 10;
+          break;
+          case 'B':
+          key = 11;
+          break;
+          default:
+          break;
+        }
+        let featureParams = {
+          trackId: trackId,
+          danceability: highlevel.danceability.all,
+          energy: energy,
+          acousticness: highlevel.mood_acoustic.all.acoustic,
+          tempo: lowLevelFeatures.rhythm.bpm,
+          valence: highlevel.mood_happy.probability,
+          speechiness: highlevel.voice_instrumental.all.voice,
+          mode: mode, 
+          key: key,
+          average_loudness: lowlevel.average_loudness,
+          duration: highLevelFeatures.metadata.audio_properties.length,
+          instrumentalness: highlevel.voice_instrumental.all.instrumental,
+          timbre: highlevel.timbre.all,
+          dynamic_complexity: lowlevel.dynamic_complexity,
+          onset_rate: lowLevelFeatures.rhythm.onset_rate,
+          lowlevel_danceability: lowLevelFeatures.rhythm.danceability,
+          gender: highlevel.gender.all,
+          tonal_atonal: highlevel.tonal_atonal.all,
+          beats_count: lowLevelFeatures.rhythm.beats_count
+        };
+
+        let moodParams = {
+          trackId: trackId,
+          acoustic: highlevel.mood_acoustic,
+          aggressive: highlevel.mood_aggressive,
+          electronic: highlevel.mood_electronic,
+          happy: highlevel.mood_happy,
+          party: highlevel.mood_party,
+          relaxed: highlevel.mood_relaxed,
+          sad: highlevel.mood_sad,
+        };
+
+        let genreParams = {
+          trackId: trackId,
+          genre: highLevelFeatures.metadata.tags.genre
+        };
+
+        TrackFeatures.create(featureParams).exec( (err, trackFeatures) => {
+          if (err) { 
+            return res.serverError(err); 
+          }
+        });
+
+        TrackMoods.create(moodParams).exec( (err, trackMoods) => {
+          if (err) { 
+            return res.serverError(err); 
+          }
+        });
+
+        TrackGenre.create(genreParams).exec( (err, trackGenre) => {
+          if (err) { 
+            return res.serverError(err); 
+          }
+        });
+
+        return res.status(200).send({
+          status: true,
+          message: 'Track features added successfully'
         });
       });
     });
