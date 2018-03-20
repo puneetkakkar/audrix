@@ -5,7 +5,7 @@
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
-    "bcrypt": "^1.0.3",
+    "bcryptjs": "^2.4.3",
     "ejs": "2.3.4",
     "gridfs-stream": "^1.1.1",
     "grunt": "1.0.1",

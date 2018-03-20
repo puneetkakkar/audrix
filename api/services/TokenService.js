@@ -1,5 +1,5 @@
 var jwt = require('jwt-simple');
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 var secret = sails.config.TOKEN_SECRET;
 
 module.exports = {

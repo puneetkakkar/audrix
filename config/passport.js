@@ -1,7 +1,7 @@
 var passport = require('passport'),
 LocalStrategy = require('passport-local').Strategy,
 FacebookStrategy = require('passport-facebook').Strategy,
-bcrypt = require('bcrypt');
+bcrypt = require('bcryptjs');
 
 function findById(id, fn) {
   User.findOne(id).done(function (err, user) {

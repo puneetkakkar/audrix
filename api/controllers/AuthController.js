@@ -2,7 +2,7 @@
 
 const _ = require("lodash");
 const jwt = require('jwt-simple');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const querystring = require('querystring');
 const request = require('request');
