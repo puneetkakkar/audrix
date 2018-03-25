@@ -51,6 +51,8 @@ module.exports.routes = {
   'get /v1/getTrack/:id' : 'PlayerController.getTrack',
   'get /v1/get.track.list' : 'PlayerController.getTrackList',
 
+  'get /v1/get.user.info' : 'UserController.getUserInfo',  
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *

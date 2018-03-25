@@ -256,6 +256,7 @@ module.exports = {
             let data = {
               username: existingUser.username,
               email: existingUser.email,
+              facebookId: existingUser.facebookId,
               token: TokenService.createJWT(existingUser.username, 3600000)
             };
             return res.status(200).send({

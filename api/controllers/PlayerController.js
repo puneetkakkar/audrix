@@ -26,7 +26,7 @@ module.exports = {
 
   uploadTrack: (req, res) => {
 
-    upload(req, res).then(function(FileName) {
+    upload(req, res).then( (FileName) => {
       var file = FileName;
       setTimeout(function() {
         var Origmusic = path.join(__dirname + '/../../uploads/' + file);
@@ -136,6 +136,9 @@ module.exports = {
     var buffer = "";
     var _id = "";
 
+    res.set('content-type', 'audio/mp3');
+    res.set('accept-ranges', 'bytes');
+
     db.open((err) => {
       db.collection('track.files').findOne({
         "metadata.trackId": id
@@ -174,8 +177,8 @@ module.exports = {
         if (err) {
           return err;
         }
-        var metadataArray = [];
-        for (var i = 0; i < files.length; i++) {
+        let metadataArray = [],j = 0;
+        for (var i = files.length - 1; i > files.length - 8; i--,j++) {
           var duration = files[i].metadata.duration;
           var minutes = Math.floor(duration / 60);
           var seconds = Math.floor(duration - minutes * 60);
@@ -194,7 +197,7 @@ module.exports = {
             secondValue = seconds;
           }
           var trackDuration = minuteValue + ':' + secondValue;
-          metadataArray[i] = {
+          metadataArray[j] = {
             trackId: files[i].metadata.trackId,
             filename: files[i].filename,
             length: files[i].length,
