@@ -10,7 +10,7 @@
  *
  */
 
-module.exports = {
+ module.exports = {
 
   /***************************************************************************
    * Set the default database connection for models in the development       *
@@ -20,5 +20,22 @@ module.exports = {
   // models: {
   //   connection: 'someMongodbServer'
   // }
+
+  aws_config : {
+  	accessKeyId: 'AKIAI2X5VDPNOUGP3JKA',
+  	secretAccessKey: '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',
+  	// region: 'mumbai'
+  },
+  s3_config : {
+  	bucket_name : 'audrix-development',
+  	base_key_track : 'tracks',
+  	base_key_logo : 'logo',
+  	base_key_user : 'user',
+  },
+  elasticsearch: {
+    host:'127.0.0.1:9200',
+    index:'audrix',
+    type:'tracks'
+  }
 
 };

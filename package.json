@@ -5,8 +5,10 @@
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
+    "aws-sdk": "^2.218.1",
     "bcryptjs": "^2.4.3",
     "ejs": "2.3.4",
+    "elasticsearch": "^14.2.2",
     "gridfs-stream": "^1.1.1",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
@@ -28,6 +30,7 @@
     "passport-facebook": "^2.1.1",
     "passport-local": "^1.0.0",
     "promise": "^8.0.1",
+    "q": "^1.5.1",
     "rc": "1.0.1",
     "sails": "~0.12.14",
     "sails-disk": "~0.10.9",

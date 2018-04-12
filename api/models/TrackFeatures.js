@@ -1,7 +1,7 @@
 module.exports = {
     attributes: {
         trackId: {
-            type: 'integer',
+            type: 'string',
             required: true,
             unique: true,
             primaryKey: true

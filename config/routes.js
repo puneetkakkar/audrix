@@ -20,7 +20,7 @@
  * http://sailsjs.org/#!/documentation/concepts/Routes/RouteTargetSyntax.html
  */
 
-module.exports.routes = {
+ module.exports.routes = {
 
   /***************************************************************************
   *                                                                          *
@@ -48,10 +48,13 @@ module.exports.routes = {
 
   'post /v1/post.track': 'PlayerController.uploadTrack',
   'post /v1/addTrackFeatures': 'PlayerController.addTrackFeatures',
+  'post /v1/addToElastic': 'PlayerController.addTrackToElastic',
   'get /v1/getTrack/:id' : 'PlayerController.getTrack',
   'get /v1/get.track.list' : 'PlayerController.getTrackList',
 
-  'get /v1/get.user.info' : 'UserController.getUserInfo',  
+  'get /v1/get.user.info' : 'UserController.getUserInfo', 
+  
+  'post /v1/search': 'SearchController.searchTrack',
 
   /***************************************************************************
   *                                                                          *
