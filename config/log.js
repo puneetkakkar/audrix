@@ -26,4 +26,8 @@ module.exports.log = {
 
   // level: 'info'
 
+  level: 'silent'
+
+  // noShip:true
+
 };

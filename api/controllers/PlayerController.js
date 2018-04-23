@@ -13,6 +13,7 @@ const {
 const Grid = require('gridfs-stream');
 const mongo = require('mongodb');
 const mm = require('musicmetadata');
+const csv = require('csv');
 let os = require('os');
 
 os.tmpDir = os.tmpdir;
@@ -151,6 +152,7 @@ module.exports = {
   },
 
   getTrack: (req, res) => {
+    console.log('hello');
     if (!req.header('Authorization')) {
       return res.status(401).send({
         message: 'Please make sure your request has an Authorization header'
@@ -159,6 +161,7 @@ module.exports = {
     var token = '';
     var trackId = req.params.id;
     var credentials = req.header('Authorization').split(' ');
+    var username = credentials[2];
 
     var host = sails.config.connections.localMongo.host;
     var port = sails.config.connections.localMongo.port;
@@ -213,7 +216,43 @@ module.exports = {
         });
 
         // dump contents to console when complete
-        readStream.on("end", function() {});
+        readStream.on("end", function() {
+          var d = new Date();
+          let params = {
+            user: username,
+            trackId: trackId,
+            play_count: 1,
+            lastPlayed: d.getTime(),
+            like: 0
+          };
+
+          PlayHistory.findOne({
+            user: username,
+            trackId: trackId
+          }).exec( (err, userHistory) => {
+            if(userHistory) {
+              PlayHistory.update({ 
+                user: userHistory.user, 
+                trackId: userHistory.trackId 
+              },{
+                play_count: userHistory.play_count + 1,
+                lastPlayed: d.getTime(),  
+              }).exec( (err, updated) => {
+                if(err) {
+                  console.log('play history not updated');
+                }
+              });
+            } else {
+              PlayHistory.create(params).exec( function(err, history) {
+                if(err) {
+                  console.log('play history not created');
+                }
+              });
+            }
+
+          });    
+
+        });
 
         
 
@@ -287,10 +326,13 @@ module.exports = {
   addTrackFeatures: (req, res) => {
     let filename = req.body.filename;
     let trackId = req.body.trackId;
+    let d = new Date();
     const Origmusic = path.join(__dirname + '/../../uploads/' + filename);
     const highLevelProfile = path.join(__dirname + '/../../assets/profile.txt');
-    const lowLevelDestination = path.join(__dirname + '/../../track_features/lowlevel.json');
-    const highLevelDestination = path.join(__dirname + '/../../track_features/highlevel.json');
+    let lowlevelFilename = 'lowlevel_'+ d.getTime() + '_1' + '.json';
+    let highlevelFilename = 'highlevel_'+ d.getTime() + '_2' + '.json';
+    const lowLevelDestination = path.join(__dirname + '/../../track_features/' + lowlevelFilename);
+    const highLevelDestination = path.join(__dirname + '/../../track_features/' + highlevelFilename);
     const lowLevel = spawn('streaming_extractor_music', [Origmusic, lowLevelDestination]);
     lowLevel.stderr.on('close', () => {
       let rawData = fs.readFileSync(lowLevelDestination);
@@ -389,6 +431,94 @@ module.exports = {
         TrackFeatures.create(featureParams).exec( (err, trackFeatures) => {
           if (err) { 
             return res.serverError(err); 
+          } else {
+            const fields = [
+            'trackId', 
+            'danceability', 
+            'energy', 
+            'acousticness', 
+            'tempo', 
+            'valence',
+            'speechiness',
+            'mode',
+            'key',
+            'average_loudness',
+            'duration',
+            'intrumentalness',
+            'timbre',
+            'dynamic_complexity',
+            'onset_rate',
+            'lowlevel_danceability',
+            'gender_female',
+            'gender_male',
+            'tonal',
+            'beats_count'
+            ];
+
+            TrackFeatures.find({
+              trackId: trackId
+            }).exec( (err, trackFeature) => {
+
+              let featureArray = trackFeature.map( (trackFeature) => {
+                let features = {};
+                features['trackId'] = trackFeature.trackId;
+                features['danceability'] = trackFeature.danceability.danceable;
+                features['energy'] = trackFeature.energy;
+                features['acousticness'] = trackFeature.acousticness;
+                features['tempo'] = trackFeature.tempo;
+                features['valence'] = trackFeature.valence;
+                features['speechiness'] = trackFeature.speechiness;
+                features['mode'] = trackFeature.mode;
+                features['key'] = trackFeature.key;
+                features['average_loudness'] = trackFeature.average_loudness;
+                features['duration'] = trackFeature.duration;
+                features['instrumentalness'] = trackFeature.instrumentalness;
+                features['timbre_bright'] = trackFeature.timbre.bright;
+                features['timbre_dark'] = trackFeature.timbre.dark;
+                features['dynamic_complexity'] = trackFeature.dynamic_complexity;
+                features['onset_rate'] = trackFeature.onset_rate;
+                features['lowlevel_danceability'] = trackFeature.lowlevel_danceability;
+                features['gender_female'] = trackFeature.gender.female;
+                features['gender_male'] = trackFeature.gender.male;
+                features['tonal'] = trackFeature.tonal_atonal.tonal;
+                features['beats_count'] = trackFeature.beats_count;
+                return features;
+              });
+
+              let csvPath = path.join(__dirname + '/../../uploads/features.csv');
+
+              fs.stat(csvPath, function (err, stat) {
+                if (err == null) {
+                  console.log('File exists');
+                 //write the actual data and end with newline
+
+                 var csvData = convertArrayOfObjectsToCSV({
+                  data: featureArray,
+                  firstTime: 0
+                });
+
+                 fs.appendFile(csvPath, csvData, function (err) {
+                  if (err) throw err;
+                  console.log('The "data to append" was appended to file!');
+                });
+               }
+               else {
+
+                var csvData = convertArrayOfObjectsToCSV({
+                  data: featureArray,
+                  firstTime: 1
+                });
+
+                fs.writeFile(csvPath, csvData, 'utf8', function (err) {
+                  if (err) {
+                    console.log('Some error occured - file either not saved or corrupted file saved.');
+                  } else{
+                    console.log('It\'s saved!');
+                  }
+                });
+              }
+            });
+            });
           }
         });
 
@@ -405,7 +535,7 @@ module.exports = {
         });
 
         fs.unlinkSync(Origmusic);
-        fs.unlinkSync(lowLevelDestination);
+        // fs.unlinkSync(lowLevelDestination);
         fs.unlinkSync(highLevelDestination);
 
         return res.status(200).send({
@@ -413,29 +543,29 @@ module.exports = {
           message: 'Track features added successfully'
         });
       });
-    });
-  },
+});
+},
 
-  addTrackToElastic: (req, res) => {
-    let filename = req.body.filename;
-    let trackId = req.body.trackId;
-    let data = {};
+addTrackToElastic: (req, res) => {
+  let filename = req.body.filename;
+  let trackId = req.body.trackId;
+  let data = {};
 
-    var host = sails.config.connections.localMongo.host;
-    var port = sails.config.connections.localMongo.port;
-    var database = sails.config.connections.localMongo.database;
-    var db = mongo.Db(database, mongo.Server(host, port));
-    db.open( (err) => {
-      db.collection('track.files').find({
-        'metadata.trackId': trackId
-      }).toArray(function(err, files) {
-        if (err) {
-          return err;
-        } else if (files.length <= 0) {
-          return res.status(200).send({
-            status: false,
-          });
-        } else {
+  var host = sails.config.connections.localMongo.host;
+  var port = sails.config.connections.localMongo.port;
+  var database = sails.config.connections.localMongo.database;
+  var db = mongo.Db(database, mongo.Server(host, port));
+  db.open( (err) => {
+    db.collection('track.files').find({
+      'metadata.trackId': trackId
+    }).toArray(function(err, files) {
+      if (err) {
+        return err;
+      } else if (files.length <= 0) {
+        return res.status(200).send({
+          status: false,
+        });
+      } else {
           // console.log(files);
           var duration = files[0].metadata.duration;
           var minutes = Math.floor(duration / 60);
@@ -512,6 +642,41 @@ module.exports = {
           });
         }
       });
-    });
-  }
+  });
+}
 };
+
+function convertArrayOfObjectsToCSV(args) {  
+  var result, ctr, keys, columnDelimiter, lineDelimiter, data, firstTime;
+
+  data = args.data || null;
+  firstTime = args.firstTime;
+  if (data == null || !data.length) {
+    return null;
+  }
+
+  columnDelimiter = args.columnDelimiter || ',';
+  lineDelimiter = args.lineDelimiter || '\n';
+
+  keys = Object.keys(data[0]);
+
+  result = '';
+
+  if (firstTime == 1) {
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+  }
+
+  data.forEach(function(item) {
+    ctr = 0;
+    keys.forEach(function(key) {
+      if (ctr > 0) result += columnDelimiter;
+
+      result += item[key];
+      ctr++;
+    });
+    result += lineDelimiter;
+  });
+
+  return result;
+}

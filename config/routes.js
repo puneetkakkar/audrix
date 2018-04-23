@@ -56,6 +56,9 @@
   
   'post /v1/search': 'SearchController.searchTrack',
 
+  'get /v1/recommendation': 'RecommendationController.contentBased',
+  'get /v1/playrecommendation/:id': 'RecommendationController.playRecommendedMusic',
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
