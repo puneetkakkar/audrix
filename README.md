@@ -1,4 +1,11 @@
-# Audrix (Music Recommendation System)  
+<p align="center">
+  <img src="./images/audrix-logo.png" alt="audrix brand" width="400"/>
+</p>
+
+<h1 align="center">AUDRIX - AUDIO RECOMMENDATION MIX PLATFORM</h1>
+
+<br>
+
 #### Problem Statement 
 One of the major problems of recommender systems in general, and music recommender systems in particular is the cold start problem, i.e., when a new user registers to the system or a new item is added to the catalog and the system does not have sufficient data associated with these items/users. In such a case, the system cannot properly recommend existing items to a new user (new user problem) or recommend a new item to the existing users.
 
@@ -16,17 +23,17 @@ Extract audio metadata features from the audio signals and use content-based lea
 7. **Support for hotkeys while playing music** 
 7. **Separate recommendation zone with recommendations on the fly using ML algorithms with good accuracy**
 
-### Our Process :-
-![Screenshot](docs/our-process.jpg)
+### High Level Process :-
+![Screenshot](images/our-process.jpg)
 
 ### User Flow :-
-![Screenshot](docs/user-flow-1.jpg)
-![Screenshot](docs/user-flow-2.jpg)
-![Screenshot](docs/user-flow-3.jpg)
+![Screenshot](images/user-flow-1.jpg)
+![Screenshot](images/user-flow-2.jpg)
+![Screenshot](images/user-flow-3.jpg)
 
 ### Platform Screens :-
-![Screenshot](docs/explore-music.png)    
-![Screenshot](docs/full-screen-player.png)    
-![Screenshot](docs/recommendation-zone.png)  
-![Screenshot](docs/search-including-results.png)  
-![Screenshot](docs/shortcut-list.png)     
+![Screenshot](images/explore-music.png)    
+![Screenshot](images/full-screen-player.png)    
+![Screenshot](images/recommendation-zone.png)  
+![Screenshot](images/search-including-results.png)  
+![Screenshot](images/shortcut-list.png)     
